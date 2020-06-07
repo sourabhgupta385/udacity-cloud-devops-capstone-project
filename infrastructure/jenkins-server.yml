@@ -1,0 +1,158 @@
+Description: This template creates a VPC, Internet Gateway, Security Group and an EC2 instance with Jenkins installed in it.
+
+Parameters:
+    EnvironmentName:
+        Description: This name will be prefixed to all the resources.
+        Type: String
+    VpcCIDR:
+        Description: CIDR for jenkins server VPC
+        Type: String
+        Default: 10.0.0.0/16
+    PublicSubnetCIDR:
+        Description: CIDR for jenkins server public subnet
+        Type: String
+        Default: 10.0.0.0/24
+    ServerAMIId:
+        Description: AMI ID for EC2 instances.
+        Type: String
+    InstanceType:
+        Description: EC2 instance type
+        Type: String
+
+Resources:
+    ## VPC ##
+
+    #VPC for Udagram App
+    VPC:
+        Type: AWS::EC2::VPC
+        Properties:
+            CidrBlock: !Ref VpcCIDR
+            EnableDnsHostnames: true
+            Tags:
+                - Key: Name
+                  Value: !Ref EnvironmentName
+
+    ## Internet Gateway ##
+
+    #Internet Gateway that provides bi-directional access for the resources within VPC
+    InternetGateway:
+        Type: AWS::EC2::InternetGateway
+        Properties:
+            Tags:
+                - Key: Name
+                  Value: !Ref EnvironmentName
+
+    # Attachment of Internet Gateway to VPC
+    InternetGatewayAttachment:
+        Type: AWS::EC2::VPCGatewayAttachment
+        Properties:
+            InternetGatewayId: !Ref InternetGateway
+            VpcId: !Ref VPC
+
+    ## Subnets ##
+
+    #First public subnet on one AZ
+    PublicSubnet:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId: !Ref VPC
+            AvailabilityZone: !Select [0, !GetAZs ""]
+            CidrBlock: !Ref PublicSubnetCIDR
+            MapPublicIpOnLaunch: true
+            Tags:
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} Public Subnet (AZ1)
+
+    ## Routing Configuration ##
+
+    # Public route table attached with VPC
+    PublicRouteTable:
+        Type: AWS::EC2::RouteTable
+        Properties:
+            VpcId: !Ref VPC
+            Tags:
+                - Key: Name
+                  Value: !Sub ${EnvironmentName} Public Routes
+
+    # Rule that directs all traffic to Internet Gateway
+    DefaultPublicRoute:
+        Type: AWS::EC2::Route
+        DependsOn: InternetGatewayAttachment
+        Properties:
+            RouteTableId: !Ref PublicRouteTable
+            DestinationCidrBlock: 0.0.0.0/0
+            GatewayId: !Ref InternetGateway
+
+    # Associating public route table with first public subnet
+    PublicSubnetRouteTableAssociation:
+        Type: AWS::EC2::SubnetRouteTableAssociation
+        Properties:
+            RouteTableId: !Ref PublicRouteTable
+            SubnetId: !Ref PublicSubnet
+
+    ## Security Group ##
+
+    # Security Group for Jenkins Server
+    JenkinsServerSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupDescription: Allow http to our hosts and SSH from local only
+            VpcId: !Ref VPC
+            SecurityGroupIngress: #Allowing inbound traffic on port 80 for accessing application and on port 22 for SSH in case of troubleshooting any issues.
+                - IpProtocol: tcp
+                  FromPort: 8080
+                  ToPort: 8080
+                  CidrIp: 0.0.0.0/0
+                - IpProtocol: tcp
+                  FromPort: 22
+                  ToPort: 22
+                  CidrIp: 0.0.0.0/0
+            SecurityGroupEgress: # Allowing outbound traffic on all ports so that updates or patches can be downloaded.
+                - IpProtocol: tcp
+                  FromPort: 0
+                  ToPort: 65535
+                  CidrIp: 0.0.0.0/0
+
+    ## Launch Configuration ##
+
+    # Launch configuration that will be used when server will spin up.
+    JenkinsServerLaunchConfig:
+        Type: AWS::AutoScaling::LaunchConfiguration
+        Properties:
+            UserData:
+                Fn::Base64: !Sub |
+                    #!/bin/bash
+                    apt-get update -y
+                    apt-get install unzip -y
+                    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+                    unzip /tmp/awscliv2.zip
+                    ./aws/install -i /usr/local/aws-cli -b /usr/bin
+                    apt install -y default-jdk
+                    wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | apt-key add -
+                    sh -c 'echo deb https://pkg.jenkins.io/debian binary/ > /etc/apt/sources.list.d/jenkins.list'
+                    apt-get update -y
+                    apt-get install -y jenkins
+                    systemctl start jenkins
+                    curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+                    mv /tmp/eksctl /usr/local/bin
+                    curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+                    chmod +x ./kubectl
+                    mv ./kubectl /usr/local/bin/kubectl
+            ImageId: !Ref ServerAMIId
+            SecurityGroups:
+                - Ref: JenkinsServerSecurityGroup
+            InstanceType: !Ref InstanceType
+            KeyName: HomeLaptop
+
+    ## Auto Scaling Group ##
+
+    # Auto scaling group for Udagram App
+    JenkinsGroup:
+        Type: AWS::AutoScaling::AutoScalingGroup
+        Properties:
+            VPCZoneIdentifier:
+                - !Ref PublicSubnet
+            LaunchConfigurationName:
+                Ref: JenkinsServerLaunchConfig
+            MinSize: "1"
+            MaxSize: "1"

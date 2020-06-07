@@ -1,0 +1,14 @@
+[
+    {
+        "ParameterKey": "EnvironmentName",
+        "ParameterValue": "Jenkins"
+    },
+    {
+        "ParameterKey": "ServerAMIId",
+        "ParameterValue": "ami-085925f297f89fce1"
+    },
+    {
+        "ParameterKey": "InstanceType",
+        "ParameterValue": "t2.micro"
+    }
+]
