@@ -25,6 +25,7 @@ $ sh scripts/create.sh jenkins-stack infrastructure/jenkins-server.yml infrastru
     -   AWS CLI
     -   eksctl CLI
     -   kubectl CLI
+    -   Tidy
 -   Once the stack creation is complete, access the Jenkins UI using `http://<EC2_PUBLIC_IP>:8080`
 -   Login using admin account and complete the initial setup of Jenkins.
 -   Install the following plugins in Jenkins:
@@ -32,6 +33,16 @@ $ sh scripts/create.sh jenkins-stack infrastructure/jenkins-server.yml infrastru
     -   [Pipeline: AWS Steps](https://plugins.jenkins.io/pipeline-aws/)
     -   [Blue Ocean](https://plugins.jenkins.io/blueocean/)
 -   Add AWS credentials in Jenkins.
--   Create new item in Jenkins of type `Pipeline` of name let's say `infra-pipeline`.
+-   Create new item in Jenkins of type `Pipeline` of name let's say `infra-pipeline`
 -   In the configuration page of `infra-pipeline`, provide the GitHub repository as `https://github.com/sourabhgupta385/udacity-cloud-devops-capstone-project` and script path as `infrastructure/Jenkinsfile`
 -   Apply and save the pipeline.
+-   Click on `Build Now` to trigger the pipeline.
+-   `infra-pipeline` does the following steps:
+    -   Creates a EKS cluster
+    -   Configures kubectl so that we can connect to EKS cluster
+    -   Note: This pipeline will take around 15-20 minutes to complete.
+-   Add Docker Hub credentials in Jenkins so that we can push docker image to Docker Hub.
+-   Create new item in Jenkins of type `Pipeline` of name let's say `udacity-capstone-website-pipeline`
+-   In the configuration page of `udacity-capstone-website-pipeline`, provide the GitHub repository as `https://github.com/sourabhgupta385/udacity-cloud-devops-capstone-project` and script path as `Jenkinsfile`
+-   Apply and save the pipeline.
+-   Click on `Build Now` to trigger the pipeline.
