@@ -18,18 +18,18 @@ In this project I have implemented all the knowledge that I have learnt from the
 
 This folder all the files related to infrastructure deployment.
 
--   `**jenkins-server-parameters.json**`: Parameters file for cloud formation stack.
--   `**jenkins-server.yml**`: CloudFormation template for creating jenkins server.
--   `**Jenkinsfile**`: Jenkinsfile for creating EKS cluster and configuring kubectl.
+-   `jenkins-server-parameters.json`: Parameters file for cloud formation stack.
+-   `jenkins-server.yml`: CloudFormation template for creating jenkins server.
+-   `Jenkinsfile`: Jenkinsfile for creating EKS cluster and configuring kubectl.
 
 #### kubernetes-resources
 
 This folder contains all template files for Kubernetes resources.
 
--   `**blue-replication-controller.yml**`: A replication controller template that creates pods with label as `app=blue`.
--   `**blue-service.yml**`: A service template that selects all the pods with label as `app=blue`.
--   `**green-replication-controller.yml**`: A replication controller template that creates pods with label as `app=green`.
--   `**green-service.yml**`: A service template that selects all the pods with label as `app=green`.
+-   `blue-replication-controller.yml`: A replication controller template that creates pods with label as `app=blue`.
+-   `blue-service.yml`: A service template that selects all the pods with label as `app=blue`.
+-   `green-replication-controller.yml`: A replication controller template that creates pods with label as `app=green`.
+-   `green-service.yml`: A service template that selects all the pods with label as `app=green`.
 
 #### screenshots
 
