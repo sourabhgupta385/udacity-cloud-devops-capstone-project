@@ -153,6 +153,10 @@ Resources:
                     # Install Tidy
                     apt-get update -y
                     apt-get install -y tidy
+                    # Add jenkins user tp docker group
+                    usermod -aG docker jenkins
+                    # Restart Jenkins
+                    systemctl restart jenkins
             ImageId: !Ref ServerAMIId
             SecurityGroups:
                 - Ref: JenkinsServerSecurityGroup
