@@ -59,11 +59,11 @@ pipeline {
 			}
 		}
 
-		stage('Create the service in the cluster, redirect to blue') {
+		stage('Create Service Pointing to Blue Replication Controller') {
 			steps {
 				withAWS(region:'us-east-1', credentials:'aws_credentials') {
 					sh '''
-						kubectl apply -f ./kubernetes-resources/blue-service.json
+						kubectl apply -f ./kubernetes-resources/blue-service.yml
 					'''
 				}
 			}
@@ -75,11 +75,11 @@ pipeline {
             }
         }
 
-		stage('Create the service in the cluster, redirect to green') {
+		stage('Create Service Pointing to Green Replication Controller') {
 			steps {
 				withAWS(region:'us-east-1', credentials:'aws_credentials') {
 					sh '''
-						kubectl apply -f ./kubernetes-resources/green-service.json
+						kubectl apply -f ./kubernetes-resources/green-service.yml
 					'''
 				}
 			}
