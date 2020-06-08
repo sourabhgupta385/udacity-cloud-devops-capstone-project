@@ -45,4 +45,9 @@ $ sh scripts/create.sh jenkins-stack infrastructure/jenkins-server.yml infrastru
 -   Create new item in Jenkins of type `Pipeline` of name let's say `udacity-capstone-website-pipeline`
 -   In the configuration page of `udacity-capstone-website-pipeline`, provide the GitHub repository as `https://github.com/sourabhgupta385/udacity-cloud-devops-capstone-project` and script path as `Jenkinsfile`
 -   Apply and save the pipeline.
--   Click on `Build Now` to trigger the pipeline.
+-   Click on `Build Now` to trigger the pipeline
+-   Once the pipeline passes with stage name `Create Service Pointing to Blue Replication Controller`, go to Load Balancer page in AWS console and look for DNS name
+-   DNS name will be something like `a009764aca96411ea97070ad08595ea3-2077112107.us-east-1.elb.amazonaws.com`
+-   In the browser, open a new tab and hit link as `http://<DNS_NAME>:8000/`. It will show the capstone project website.
+-   Approve the pipeline to proceed to next stage
+-   Once the pipeline is complete, service will be pointing to pods that has label as `app=green`
